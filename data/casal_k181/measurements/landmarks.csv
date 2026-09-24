@@ -1,0 +1,7 @@
+name,x,y,z
+swingarm_pivot,0,0,0
+steering_head_top,300,500,0
+steering_head_bottom,285,390,0
+engine_mount_front,120,180,0
+engine_mount_rear,40,150,0
+rear_shock_mount,40,300,0
