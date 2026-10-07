@@ -20,17 +20,17 @@ from reconstruction.image.clicking import click_points
 
 
 def main():
-    p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument("image", help="Photograph to click landmarks on.")
-    p.add_argument("landmarks_3d", help="CSV of 3D landmarks (name, x, y, z).")
-    p.add_argument("-o", "--output",
-                   help="Destination CSV; defaults to <image>_points.csv.")
-    a = p.parse_args()
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("image", help="Photograph to click landmarks on.")
+    parser.add_argument("landmarks_3d", help="CSV of 3D landmarks (name, x, y, z).")
+    parser.add_argument("-o", "--output",
+                       help="Destination CSV; defaults to <image>_points.csv.")
+    args = parser.parse_args()
 
-    names, _ = read_landmarks_3d(a.landmarks_3d)
-    points = click_points(a.image, names)
-    out = a.output or str(
-        Path(a.image).with_name(Path(a.image).stem + "_points.csv"))
+    names, _ = read_landmarks_3d(args.landmarks_3d)
+    points = click_points(args.image, names)
+    out = args.output or str(
+        Path(args.image).with_name(Path(args.image).stem + "_points.csv"))
     write_points_2d(out, names, points)
     print(f"Wrote {out}")
 

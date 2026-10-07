@@ -1,7 +1,8 @@
 name,x,y,z
-swingarm_pivot,0,0,0
-steering_head_top,300,500,0
-steering_head_bottom,285,390,0
-engine_mount_front,120,180,0
-engine_mount_rear,40,150,0
-rear_shock_mount,40,300,0
+swingarm_pivot_left,-72,0,0
+side_panel_mount_a_left,-23.40,-26.07,66.69
+side_panel_mount_b_left,-23.40,47.53,76.48
+side_panel_mount_c_left,-23.40,103.64,261.15
+side_panel_mount_d_left,-23.40,144.66,207.42
+fuel_tank_mount_left,-43.75,172.64,263.64
+engine_mount_top_left,-17.50,210.02,224.26

@@ -33,13 +33,13 @@ The long-term goal is to parameterize unknown frame geometry and fit a small num
 
 Use one right-handed coordinate system for the mechanical model. OpenCV camera coordinates use +Z forward from the camera.
 
-## Install
+## Install (in editable mode)
 
 ```bash
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-pip install -e .
+pip install --editable .
 ```
 
 For large Canon RAW files, Git LFS is preferable to normal Git history.
