@@ -47,10 +47,15 @@ def main():
 
     # Red circles = clicked positions; green crosses = model reprojection.
     for actual, predicted in zip(x, xp):
-        cv2.circle(image, tuple(np.round(actual).astype(int)),
-                   6, (0, 0, 255), 2)
-        cv2.drawMarker(image, tuple(np.round(predicted).astype(int)),
-                       (0, 255, 0), cv2.MARKER_CROSS, 14, 2)
+        actual_pixel = tuple(int(round(value)) for value in actual)
+        cv2.circle(image, actual_pixel, 6, (0, 0, 255), 2)
+
+        if (np.all(np.isfinite(predicted))
+                and 0 <= predicted[0] < image.shape[1]
+                and 0 <= predicted[1] < image.shape[0]):
+            predicted_pixel = tuple(int(round(value)) for value in predicted)
+            cv2.drawMarker(image, predicted_pixel, (0, 255, 0),
+                           cv2.MARKER_CROSS, 14, 2)
     cv2.imwrite(a.output, image)
     print(f"Wrote {a.output}")
 
