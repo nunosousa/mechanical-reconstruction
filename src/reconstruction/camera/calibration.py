@@ -11,9 +11,12 @@ system.
 
 import cv2
 import numpy as np
+from pathlib import Path
 
 
-def calibrate_checkerboard(image_paths, pattern_size=(9, 6), square_size=25.0):
+def calibrate_checkerboard(
+    image_paths, pattern_size=(9, 6), square_size=25.0, debug_dir=None
+):
     """Estimate intrinsics + distortion from a set of checkerboard photos.
 
     Parameters
@@ -25,6 +28,8 @@ def calibrate_checkerboard(image_paths, pattern_size=(9, 6), square_size=25.0):
     square_size : float
         Physical side length of one board square, in the units you want
         the camera translation to be reported in (typically millimetres).
+    debug_dir : path-like, optional
+        If provided, write annotated copies of all input images there.
 
     Returns
     -------
@@ -42,8 +47,11 @@ def calibrate_checkerboard(image_paths, pattern_size=(9, 6), square_size=25.0):
 
     object_points, image_points = [], []
     image_size = None
+    if debug_dir is not None:
+        debug_dir = Path(debug_dir)
+        debug_dir.mkdir(parents=True, exist_ok=True)
 
-    for path in image_paths:
+    for index, path in enumerate(image_paths):
         image = cv2.imread(str(path))
         if image is None:
             raise FileNotFoundError(path)
@@ -55,6 +63,20 @@ def calibrate_checkerboard(image_paths, pattern_size=(9, 6), square_size=25.0):
             cv2.CALIB_CB_ADAPTIVE_THRESH
             | cv2.CALIB_CB_NORMALIZE_IMAGE
             | cv2.CALIB_CB_FAST_CHECK)
+        if debug_dir is not None:
+            annotated = image.copy()
+            if found:
+                cv2.drawChessboardCorners(annotated, pattern_size, corners, found)
+                status = f"Detected {len(corners)} corners"
+                color = (0, 200, 0)
+            else:
+                status = "Checkerboard not detected"
+                color = (0, 0, 255)
+            cv2.putText(annotated, status, (20, 40), cv2.FONT_HERSHEY_SIMPLEX,
+                        1, color, 2, cv2.LINE_AA)
+            output_path = debug_dir / f"{index:02d}_{Path(path).name}"
+            if not cv2.imwrite(str(output_path), annotated):
+                raise OSError(f"Could not write corner visualization: {output_path}")
         if not found:
             # Skip photos where the whole board is not visible / detectable.
             continue

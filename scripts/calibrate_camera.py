@@ -32,6 +32,8 @@ def main():
                    help="Number of inner corners per column of the board.")
     p.add_argument("--square-size", type=float, default=25.0,
                    help="Physical size of one board square (mm by convention).")
+    p.add_argument("--debug-dir",
+                   help="Write annotated copies of all images for corner verification.")
     a = p.parse_args()
 
     # Accept both real globs and plain filenames — glob() returns [] for
@@ -41,7 +43,7 @@ def main():
         paths.extend(glob.glob(pattern) or [pattern])
 
     rms, K, dist, rvecs, tvecs = calibrate_checkerboard(
-        paths, (a.cols, a.rows), a.square_size)
+        paths, (a.cols, a.rows), a.square_size, debug_dir=a.debug_dir)
 
     # Only intrinsics are meaningful here; rvec/tvec placeholders will be
     # overwritten by fit_camera.py or a solvePnP step against real scene
