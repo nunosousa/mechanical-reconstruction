@@ -1,8 +1,8 @@
 name,u,v
-swingarm_pivot_left,4992.849116636791,1423.3911773158352
-side_panel_mount_a_left,4768.416015491361,1007.368843485282
-side_panel_mount_b_left,4500.191089732189,1275.5937692444545
-side_panel_mount_c_left,3892.5795232165115,804.8316546467236
-side_panel_mount_d_left,3865.209632832923,1231.8019446307121
-fuel_tank_mount_left,3673.6204001477995,1188.0101200169697
-engine_mount_top_left,3536.7709482298546,1472.6569800062953
+swingarm_pivot_left,5000.0,1415.0
+side_panel_mount_a_left,4779.0,999.0
+side_panel_mount_b_left,4507.0,1267.0
+side_panel_mount_c_left,3902.0,801.0
+side_panel_mount_d_left,3877.0,1227.0
+fuel_tank_mount_left,3682.0,1183.0
+engine_mount_top_left,3542.0,1475.0
