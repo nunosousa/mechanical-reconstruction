@@ -18,6 +18,11 @@ Initial target: reverse-engineering the frame geometry of a Casal K181 moped.
 
 The long-term goal is to parameterize unknown frame geometry and fit a small number of geometric parameters against multiple photographs.
 
+For circular landmarks, pass `--circle NAME` (repeat for each circle). Click
+an approximate center and a point on its edge; the picker fits and overlays a
+nearby image ellipse, then leaves the fitted results open for review. The CSV
+still contains the fitted image center as `u,v`.
+
 ## Structure
 
 - `src/reconstruction/` — reusable algorithms

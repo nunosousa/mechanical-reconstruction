@@ -10,6 +10,9 @@ Example
 -------
     click_landmarks.py photo.jpg data/casal_k181/measurements/landmarks.csv \\
                        -o results/photo_points.csv
+
+Mark circular features for edge fitting with one ``--circle NAME`` per feature.
+For each, click a rough center followed by a point on its circumference.
 """
 
 import argparse
@@ -23,12 +26,17 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("image", help="Photograph to click landmarks on.")
     parser.add_argument("landmarks_3d", help="CSV of 3D landmarks (name, x, y, z).")
+    parser.add_argument("--circle", action="append", default=[], metavar="NAME",
+                        help="Fit an image ellipse for this circular landmark; repeat as needed.")
     parser.add_argument("-o", "--output",
                        help="Destination CSV; defaults to <image>_points.csv.")
     args = parser.parse_args()
 
     names, _ = read_landmarks_3d(args.landmarks_3d)
-    points = click_points(args.image, names)
+    unknown = set(args.circle) - set(names)
+    if unknown:
+        parser.error(f"unknown circular landmark(s): {', '.join(sorted(unknown))}")
+    points = click_points(args.image, names, circle_names=args.circle)
     out = args.output or str(
         Path(args.image).with_name(Path(args.image).stem + "_points.csv"))
     write_points_2d(out, names, points)

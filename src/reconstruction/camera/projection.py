@@ -25,7 +25,10 @@ def camera_matrix(focal_length, image_size, principal_point=None):
 
 def project_points(points_3d, K, rvec, tvec, dist=None):
     """Project world-frame 3D points into pixel coordinates."""
-    dist = np.zeros(5) if dist is None else dist
+    K = np.asarray(K, dtype=float)
+    rvec = np.asarray(rvec, dtype=float).reshape(3, 1)
+    tvec = np.asarray(tvec, dtype=float).reshape(3, 1)
+    dist = np.zeros(5) if dist is None else np.asarray(dist, dtype=float)
     # cv2.projectPoints wants shape (N, 1, 3) for the input.
     pts = np.asarray(points_3d, dtype=float).reshape(-1, 1, 3)
     out, _ = cv2.projectPoints(pts, rvec, tvec, K, dist)
