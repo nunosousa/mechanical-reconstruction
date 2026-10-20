@@ -22,6 +22,25 @@ def read_landmarks_3d(path):
     return names, np.asarray(points, dtype=float)
 
 
+def read_circular_landmarks(path):
+    """Return names marked circular in the optional ``circular`` column."""
+    circular_names = set()
+    with Path(path).open(newline="", encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        if "circular" not in (reader.fieldnames or []):
+            return circular_names
+        for row in reader:
+            value = (row.get("circular") or "").strip().lower()
+            if value in ("", "false"):
+                continue
+            if value != "true":
+                raise ValueError(
+                    f"Invalid circular value for {row['name']}: {value!r}; "
+                    "expected 'true' or 'false'.")
+            circular_names.add(row["name"])
+    return circular_names
+
+
 def read_points_2d(path):
     """Return ``(names, points)`` where points is (N, 2) in pixel (u, v)."""
     names, points = [], []
