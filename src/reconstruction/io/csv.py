@@ -1,7 +1,7 @@
 """CSV read/write helpers for the two shapes of point data used by the pipeline.
 
 * 3D landmarks / triangulated points — columns ``name, x, y, z``.
-* 2D image clicks                     — columns ``name, u, v``.
+* 2D image clicks                     — columns ``name, u, v, selection_method``.
 
 Keeping both readers and writers here means the scripts stay tiny and the
 on-disk format is defined in exactly one place.
@@ -51,14 +51,20 @@ def read_points_2d(path):
     return names, np.asarray(points, dtype=float)
 
 
-def write_points_2d(path, names, points):
-    """Write named 2D pixel coordinates."""
+def write_points_2d(path, names, points, methods=None):
+    """Write named 2D pixel coordinates and their selection methods."""
     path = Path(path)
+    if methods is None:
+        methods = ["manual"] * len(points)
+    if len(names) != len(points) or len(methods) != len(points):
+        raise ValueError("names, points, and methods must have matching lengths.")
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", newline="", encoding="utf-8") as f:
         w = csv.writer(f)
-        w.writerow(["name", "u", "v"])
-        w.writerows([n, float(p[0]), float(p[1])] for n, p in zip(names, points))
+        w.writerow(["name", "u", "v", "selection_method"])
+        w.writerows(
+            [n, float(p[0]), float(p[1]), method]
+            for n, p, method in zip(names, points, methods))
 
 
 def write_points_3d(path, points, names=None):

@@ -13,7 +13,10 @@ Example
 
 Mark circular features for edge fitting with ``circular=true`` in the input
 landmarks CSV. For each, click a rough center followed by a point on its
-circumference.
+circumference. If fitting fails, the terminal offers a retry, a manual center
+click, or the approximate center already selected. Press ``z`` to zoom by
+dragging a region without recording that drag as a point; press ``r`` to reset.
+The output CSV records the selection method for each point.
 """
 
 import argparse
@@ -37,10 +40,11 @@ def main():
 
     names, _ = read_landmarks_3d(args.landmarks_3d)
     circle_names = read_circular_landmarks(args.landmarks_3d)
-    points = click_points(args.image, names, circle_names=circle_names)
+    points, methods = click_points(
+        args.image, names, circle_names=circle_names)
     out = args.output or str(
         Path(args.image).with_name(Path(args.image).stem + "_points.csv"))
-    write_points_2d(out, names, points)
+    write_points_2d(out, names, points, methods=methods)
     print(f"Wrote {out}")
 
 

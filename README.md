@@ -20,8 +20,13 @@ The long-term goal is to parameterize unknown frame geometry and fit a small num
 
 Mark circular landmarks with `circular=true` in `landmarks.csv`. For each,
 click an approximate center and a point on its edge; the picker fits and
-overlays a nearby image ellipse, then leaves the fitted results open for
-review. The output CSV contains the fitted image center as `u,v`.
+overlays a nearby image ellipse. If fitting fails, the picker offers a retry,
+a manual center click, or the approximate center already clicked, so the
+remaining landmarks can still be selected. Press `z` to enter drag-rectangle
+zoom mode before selecting points; the zoom drag is not recorded as a point.
+Press `r` to restore the original view. The output CSV contains each image
+center as `u,v`, plus `selection_method`: `manual`, `circle_fit`,
+`manual_center`, or `approximate_center`.
 
 ## Structure
 

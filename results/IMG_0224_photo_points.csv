@@ -1,0 +1,8 @@
+name,u,v,selection_method
+swingarm_pivot_right,1438.9662322998047,2068.5141525268555,circle_fit
+side_panel_mount_a_right,1704.8689994812012,1251.7072448730469,circle_fit
+side_panel_mount_b_right,2364.5716819763184,1618.0660972595215,circle_fit
+side_panel_mount_c_right,4092.8815383911133,745.0509719848633,circle_fit
+side_panel_mount_d_right,3981.8222465515137,1379.9745864868164,circle_fit
+fuel_tank_mount_right,4648.336311340332,1299.450210571289,circle_fit
+engine_mount_top_right,4567.371734619141,1639.0154266357422,circle_fit
