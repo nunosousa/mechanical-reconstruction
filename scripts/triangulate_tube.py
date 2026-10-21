@@ -16,7 +16,7 @@ import csv
 import numpy as np
 
 from reconstruction.camera.pose import load_camera
-from reconstruction.camera.projection import projection_matrix
+from reconstruction.camera.projection import projection_matrix, undistort_pixels
 from reconstruction.reconstruction.triangulation import triangulate
 
 
@@ -42,6 +42,9 @@ def main():
     if len(x1) != len(x2):
         raise ValueError("Tube files must contain the same number of points.")
 
+    # Linear triangulation assumes an ideal pinhole, so strip distortion.
+    x1 = undistort_pixels(x1, c1["K"], c1["dist"])
+    x2 = undistort_pixels(x2, c2["K"], c2["dist"])
     X = triangulate(
         x1, x2,
         projection_matrix(c1["K"], c1["rvec"], c1["tvec"]),

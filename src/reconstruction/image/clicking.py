@@ -3,12 +3,20 @@
 The pickers open the requested image in a matplotlib window and wait for the
 user to click. Landmark picking supports drag-rectangle zoom before placing
 points; timeouts are disabled so you can take your time.
+
+Images are shown in the sensor frame (EXIF orientation ignored, see
+:mod:`reconstruction.image.preprocessing`), so portrait shots appear rotated.
+That is intentional: the returned (u, v) must match the calibrated intrinsics.
+matplotlib's ``imshow`` places pixel centres at integer coordinates with v
+increasing downward, which matches OpenCV's convention.
 """
 
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.patches import Ellipse
+
+from reconstruction.image.preprocessing import load_image
 
 
 def fit_ellipse_near_hint(image, center, radius):
@@ -193,11 +201,9 @@ def click_points(image_path, names, circle_names=()):
     A crosshair is drawn at each accepted click for visual feedback. The
     returned coordinates and selection methods are aligned 1:1 with ``names``.
     """
-    image = cv2.imread(str(image_path))
-    if image is None:
-        raise FileNotFoundError(image_path)
+    image_bgr = load_image(image_path)
     # matplotlib expects RGB; OpenCV loaded BGR.
-    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    image = cv2.cvtColor(image_bgr, cv2.COLOR_BGR2RGB)
     fig, ax = plt.subplots(figsize=(12, 8))
     ax.imshow(image)
     reset_view = (ax.get_xlim(), ax.get_ylim())
@@ -222,7 +228,7 @@ def click_points(image_path, names, circle_names=()):
                 hint_radius = float(np.linalg.norm(
                     np.asarray(result[1]) - hint_center))
                 fitted_center, axes, angle, method = _fit_circle_with_fallback(
-                    cv2.cvtColor(image, cv2.COLOR_RGB2BGR), fig, ax, name,
+                    image_bgr, fig, ax, name,
                     hint_center, hint_radius, reset_view)
                 u, v = fitted_center
                 if axes is not None:
@@ -252,10 +258,7 @@ def click_polyline(image_path):
     Used for tube centrelines where the number of samples is up to the
     user and depends on how curved the tube looks in that view.
     """
-    image = cv2.imread(str(image_path))
-    if image is None:
-        raise FileNotFoundError(image_path)
-    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    image = cv2.cvtColor(load_image(image_path), cv2.COLOR_BGR2RGB)
     fig, ax = plt.subplots(figsize=(12, 8))
     ax.imshow(image)
     ax.set_title("Click points in order; press Enter when done")

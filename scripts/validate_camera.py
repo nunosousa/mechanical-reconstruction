@@ -17,7 +17,8 @@ import cv2
 import numpy as np
 
 from reconstruction.io.csv import read_landmarks_3d, read_points_2d
-from reconstruction.camera.pose import load_camera
+from reconstruction.camera.pose import check_image_size, load_camera
+from reconstruction.image.preprocessing import image_size, load_image
 from reconstruction.camera.projection import project_points
 
 
@@ -31,13 +32,14 @@ def main():
                    help="Destination for the annotated image.")
     a = p.parse_args()
 
-    image = cv2.imread(a.image)
+    image = load_image(a.image)
     n3, X = read_landmarks_3d(a.landmarks_3d)
     n2, x = read_points_2d(a.points_2d)
     if n3 != n2:
         raise ValueError("Landmark names/order do not match.")
 
     cam = load_camera(a.camera)
+    check_image_size(cam, image_size(image))
     xp = project_points(X, cam["K"], cam["rvec"], cam["tvec"], cam["dist"])
     errors = np.linalg.norm(xp - x, axis=1)
 
@@ -56,7 +58,8 @@ def main():
             predicted_pixel = tuple(int(round(value)) for value in predicted)
             cv2.drawMarker(image, predicted_pixel, (0, 255, 0),
                            cv2.MARKER_CROSS, 14, 2)
-    cv2.imwrite(a.output, image)
+    if not cv2.imwrite(a.output, image):
+        raise OSError(f"Could not write {a.output}")
     print(f"Wrote {a.output}")
 
 

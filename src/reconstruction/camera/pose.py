@@ -50,6 +50,22 @@ def load_camera(path):
     }
 
 
+def check_image_size(camera, image_size):
+    """Raise if an image's (width, height) differs from the camera model's.
+
+    Catches pixel-frame mismatches such as a portrait photo loaded with EXIF
+    rotation applied (4000x6000) against a landscape calibration (6000x4000),
+    where every clicked (u, v) would be in a rotated coordinate system.
+    """
+    expected = tuple(int(v) for v in camera["image_size"])
+    actual = tuple(int(v) for v in image_size)
+    if actual != expected:
+        raise ValueError(
+            f"Image size {actual} does not match camera model size {expected}. "
+            "Pixel coordinates must be in the same (sensor) frame as the "
+            "calibration.")
+
+
 def solve_pnp(points_3d, points_2d, K, dist=None):
     """Solve for camera pose given known 3D<->2D correspondences.
 

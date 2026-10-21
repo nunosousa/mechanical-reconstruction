@@ -13,6 +13,8 @@ import cv2
 import numpy as np
 from pathlib import Path
 
+from reconstruction.image.preprocessing import image_size as size_of, load_image
+
 
 def calibrate_checkerboard(
     image_paths, pattern_size=(9, 6), square_size=25.0, debug_dir=None
@@ -33,9 +35,11 @@ def calibrate_checkerboard(
 
     Returns
     -------
-    Whatever ``cv2.calibrateCamera`` returns: ``(rms, K, dist, rvecs, tvecs)``.
-    The rvecs / tvecs describe the board pose in each individual image and
-    are usually discarded by callers.
+    ``(rms, K, dist, rvecs, tvecs, image_size)`` — the first five are what
+    ``cv2.calibrateCamera`` returns; the rvecs / tvecs describe the board
+    pose in each image and are usually discarded. ``image_size`` is the
+    ``(width, height)`` of the sensor-frame images (EXIF orientation is
+    ignored, so portrait shots are calibrated in the same frame).
     """
     # Build the canonical 3D object points for a planar board lying in Z=0,
     # with corners at integer multiples of ``square_size``. The ordering
@@ -52,12 +56,16 @@ def calibrate_checkerboard(
         debug_dir.mkdir(parents=True, exist_ok=True)
 
     for index, path in enumerate(image_paths):
-        image = cv2.imread(str(path))
-        if image is None:
-            raise FileNotFoundError(path)
+        image = load_image(path)
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        # OpenCV wants image_size as (width, height), i.e. (cols, rows).
-        image_size = (gray.shape[1], gray.shape[0])
+        # A single K is only valid for one pixel grid; mixing sizes (e.g.
+        # EXIF-rotated portrait shots) would corrupt the principal point.
+        if image_size is None:
+            image_size = size_of(image)
+        elif size_of(image) != image_size:
+            raise ValueError(
+                f"{path} is {size_of(image)} but earlier images are "
+                f"{image_size}; all calibration images must share one size.")
         found, corners = cv2.findChessboardCorners(
             gray, pattern_size,
             cv2.CALIB_CB_ADAPTIVE_THRESH
@@ -93,4 +101,6 @@ def calibrate_checkerboard(
         # distortion poorly constrained.
         raise RuntimeError("Fewer than five usable checkerboard images.")
 
-    return cv2.calibrateCamera(object_points, image_points, image_size, None, None)
+    rms, K, dist, rvecs, tvecs = cv2.calibrateCamera(
+        object_points, image_points, image_size, None, None)
+    return rms, K, dist, rvecs, tvecs, image_size

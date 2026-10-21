@@ -5,7 +5,7 @@ Step 4a of the workflow (used when we control the camera). Feed one or
 more shell globs pointing at checkerboard photos and write a JSON camera
 file containing K, distortion, and image size. The saved rvec / tvec are
 zeroed because the checkerboard pose is meaningless in the reconstruction
-coordinate system — pose comes later via ``fit_camera.py`` or PnP.
+coordinate system — pose comes later via ``fit_camera.py --intrinsics``.
 
 Example
 -------
@@ -14,7 +14,6 @@ Example
 
 import argparse
 import glob
-import cv2
 
 from reconstruction.camera.calibration import calibrate_checkerboard
 from reconstruction.camera.pose import save_camera
@@ -42,15 +41,13 @@ def main():
     for pattern in a.images:
         paths.extend(glob.glob(pattern) or [pattern])
 
-    rms, K, dist, rvecs, tvecs = calibrate_checkerboard(
+    rms, K, dist, rvecs, tvecs, image_size = calibrate_checkerboard(
         paths, (a.cols, a.rows), a.square_size, debug_dir=a.debug_dir)
 
-    # Only intrinsics are meaningful here; rvec/tvec placeholders will be
-    # overwritten by fit_camera.py or a solvePnP step against real scene
-    # landmarks.
-    image = cv2.imread(paths[0])
-    save_camera(a.output, K, dist, [0, 0, 0], [0, 0, 0],
-                (image.shape[1], image.shape[0]), rms)
+    # Only intrinsics are meaningful here; rvec/tvec placeholders are
+    # replaced by ``fit_camera.py --intrinsics`` (solvePnP) against real
+    # scene landmarks.
+    save_camera(a.output, K, dist, [0, 0, 0], [0, 0, 0], image_size, rms)
 
     print(f"usable images: {len(rvecs)}")
     print(f"calibration RMS: {rms:.4f} px")

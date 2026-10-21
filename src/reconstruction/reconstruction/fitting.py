@@ -6,8 +6,10 @@ photo; we jointly solve for the focal length and camera pose so that the
 landmarks reproject onto their clicked pixel positions.
 """
 
+import cv2
 import numpy as np
 from scipy.optimize import least_squares
+from reconstruction.camera.pose import solve_pnp
 from reconstruction.camera.projection import project_points
 
 
@@ -40,17 +42,29 @@ def fit_camera_unknown_focal(points_3d, points_2d, image_size,
     points_2d = np.asarray(points_2d, float)
     width, height = image_size
     if focal_guess is None:
-        # Rough prior: image diagonal is comparable to focal length in
-        # pixels for a "normal" field of view.
+        # Rough prior: the longer image side is comparable to the focal
+        # length in pixels for a "normal" field of view.
         focal_guess = max(width, height)
     cx, cy = principal_point or (width / 2.0, height / 2.0)
 
     K = np.array([[1., 0., cx], [0., 1., cy], [0., 0., 1.]])
 
-    # Scene scale is used to pick a starting translation in front of the
-    # scene: an initial guess of ~2x the point-cloud extent keeps the
-    # optimizer away from the degenerate camera-inside-scene case.
-    scale = max(float(np.linalg.norm(np.ptp(points_3d, axis=0))), 1.0)
+    # Seed the pose with solvePnP over a sweep of focal lengths. A fixed
+    # "camera on the +Z axis" start is far from side-on views and lets the
+    # optimizer collapse f towards 0 (all points onto the principal point).
+    best = None
+    for f in focal_guess * np.array([0.25, 0.5, 0.75, 1.0, 1.5, 2.0, 3.0, 4.0]):
+        K[0, 0] = K[1, 1] = f
+        try:
+            rvec, tvec = solve_pnp(points_3d, points_2d, K)
+        except (RuntimeError, cv2.error):
+            continue
+        err = np.sum((project_points(points_3d, K, rvec, tvec) - points_2d) ** 2)
+        if np.isfinite(err) and (best is None or err < best[0]):
+            best = (err, f, rvec.ravel(), tvec.ravel())
+    if best is None:
+        raise RuntimeError("Could not initialise the camera pose with solvePnP.")
+    _, f0, r0, t0 = best
 
     # x = [ log(f), rx, ry, rz, tx, ty, tz ]
     # Parameterising the focal length as log(f) keeps it strictly
@@ -58,7 +72,7 @@ def fit_camera_unknown_focal(points_3d, points_2d, image_size,
     # multiplicative steps in focal length (which is what we want, since
     # a factor-of-two change in focal length matters roughly equally at
     # any magnitude).
-    x0 = np.r_[np.log(focal_guess), 0., 0., 0., 0., 0., max(2 * scale, 1.)]
+    x0 = np.r_[np.log(f0), r0, t0]
 
     def residual(x):
         f = np.exp(x[0])

@@ -39,11 +39,22 @@ def projection_matrix(K, rvec, tvec):
     """Return the 3x4 projection matrix P = K [R | t].
 
     Handy for linear triangulation, where OpenCV wants the full P rather
-    than the separated (K, rvec, tvec) form. Note that lens distortion is
-    not embedded in P; if it matters, undistort the pixel coordinates
-    first (this project's cameras have negligible distortion on the axes
-    we care about, so we currently do not).
+    than the separated (K, rvec, tvec) form. Lens distortion is not
+    embedded in P; pass pixel coordinates through :func:`undistort_pixels`
+    before using them with P.
     """
     R, _ = cv2.Rodrigues(np.asarray(rvec, dtype=float))
     t = np.asarray(tvec, dtype=float).reshape(3, 1)
     return K @ np.hstack((R, t))
+
+
+def undistort_pixels(points_2d, K, dist):
+    """Remove lens distortion from pixel coordinates, keeping them in pixels.
+
+    The result is where each point would appear through an ideal pinhole
+    camera with the same K, so it can be used with :func:`projection_matrix`.
+    """
+    pts = np.asarray(points_2d, dtype=float).reshape(-1, 1, 2)
+    K = np.asarray(K, dtype=float)
+    dist = np.asarray(dist, dtype=float)
+    return cv2.undistortPoints(pts, K, dist, P=K).reshape(-1, 2)

@@ -16,7 +16,7 @@ def canny_edges(image, low=50, high=150):
 
 
 def distance_transform_from_edges(edges):
-    """Signed distance from every pixel to the nearest edge pixel.
+    """Unsigned distance from every pixel to the nearest edge pixel.
 
     ``cv2.distanceTransform`` measures distance to the nearest *zero*
     pixel; we invert the Canny output so that edges are the zeros. The

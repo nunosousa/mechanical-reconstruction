@@ -9,7 +9,9 @@ Initial target: reverse-engineering the frame geometry of a Casal K181 moped.
 1. Build a measured 3D reference model in FreeCAD.
 2. Record reliable 3D landmarks in `data/casal_k181/measurements/landmarks.csv`.
 3. Click those landmarks in photographs with `click_landmarks.py`.
-4. Estimate or load the camera model with `fit_camera.py` / `calibrate_camera.py`.
+4. Calibrate intrinsics with `calibrate_camera.py`, then solve each photo's pose with
+   `fit_camera.py --intrinsics results/camera.json` (omit `--intrinsics` for
+   uncalibrated historical photos to also estimate the focal length).
 5. Validate reprojection with `validate_camera.py`.
 6. Click corresponding tube centreline points in two views with `click_tube.py`.
 7. Triangulate them with `triangulate_tube.py`.
@@ -42,6 +44,15 @@ center as `u,v`, plus `selection_method`: `manual`, `circle_fit`,
 ## Coordinate convention
 
 Use one right-handed coordinate system for the mechanical model. OpenCV camera coordinates use +Z forward from the camera.
+
+Image pixel coordinates `(u, v)` follow OpenCV: origin at the top-left pixel
+centre, `u` to the right, `v` down. They are always in the camera's **sensor
+frame**, i.e. the pixel grid as stored in the JPEG with EXIF `Orientation`
+ignored. Photos taken in portrait orientation therefore appear rotated in the
+picker; this is intentional, because a single calibrated intrinsic matrix is
+only valid for one pixel grid. Load images through
+`reconstruction.image.preprocessing.load_image` rather than plain
+`cv2.imread`, which applies EXIF rotation by default.
 
 ## Install (in editable mode)
 
